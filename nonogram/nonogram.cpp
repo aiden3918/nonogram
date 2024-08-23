@@ -7,12 +7,17 @@
 #define OLC_PGEX_QUICKGUI
 #include "olcPGEX_QuickGUI.h"
 
+#include "util.h"
+#include "game.h"
+
 class App : public olc::PixelGameEngine {
 public:
     App() { sAppName = "nonogram"; }
 
 public:
     bool OnUserCreate() override {
+        _game = new Game();
+        _game->NewGame();
         return true;
     }
 
@@ -22,11 +27,13 @@ public:
     }
 
     bool OnUserDestroy() override {
+        delete _game;
         return true;
     }
 
 private:
     olc::QuickGUI::Manager _guiManager;
+    Game* _game;
 };
 
 int main()

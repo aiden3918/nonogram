@@ -94,4 +94,18 @@ inline vec2D get_png_image_dimensions(std::string& file_path)
 	return size;
 }
 
+template <typename T>
+void coutVec(const std::vector<T> v) {
+	for (T t : v) std::cout << t << ", ";
+	std::cout << std::endl;
+}
+
+template <typename T>
+void cout2DVec(std::vector<std::vector<T>> v) {
+	for (std::vector<T> sv : v) {
+		for (T t : sv) std::cout << t << ", ";
+		std::cout << std::endl;
+	}
+}
+
 #endif // !util_h
