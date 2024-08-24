@@ -28,9 +28,10 @@ struct GameTile {
 struct GameGrid {
 	// 5x5, 10x10, 15x15, 20x20
 	std::vector<GameTile> tiles;
-	std::vector<std::pair<std::vector<int>, std::string>> _horizontalHints; // sides that give hints (element 0 is horizntal, element 1 is vertical)
-	std::vector<std::pair<std::vector<int>, std::string>> _verticalHints; // sides that give hints (element 0 is horizntal, element 1 is vertical)
+	// sides that give hints (element 0 is horizntal, element 1 is vertical)
+	std::vector<std::pair<std::vector<int>, std::string>> _horizontalHints, _verticalHints;
 	std::vector<std::vector<bool>> answer;
+	int horiDisp, vertDisp;
 
 	vec2D pos; // top-left of where clickable tiles starts
 	int tSize;

@@ -9,6 +9,7 @@
 
 #include "util.h"
 #include "game.h"
+#include <random>
 
 class App : public olc::PixelGameEngine {
 public:
@@ -16,6 +17,8 @@ public:
 
 public:
     bool OnUserCreate() override {
+        srand(time(NULL));
+
         _game = new Game();
         _game->gameGrid.pos = { 100, 100 };
         _game->NewGame(10, 10);
@@ -24,6 +27,8 @@ public:
     }
 
     bool OnUserUpdate(float fElapsedTime) override {
+        if (GetMouse(olc::Mouse::LEFT).bPressed) std::cout << "m1" << std::endl;
+        if (GetMouse(olc::Mouse::RIGHT).bPressed) std::cout << "m2" << std::endl;
         Clear(olc::WHITE);
         _game->Update(this);
         _game->Draw(this);

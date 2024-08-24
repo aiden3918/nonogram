@@ -14,6 +14,8 @@ GameTile::GameTile(const vec2D& gridPos, const int& tileSize, const int& row, co
 GameTile::~GameTile() {}
 
 void GameGrid::Clear(const int& numTiles, const int& tileSize) {
+	horiDisp = 0;
+	vertDisp = 0;
 	tiles.clear();
 
 	answer.clear();
@@ -67,6 +69,9 @@ void GameGrid::CreateNewAnswer() {
 		std::copy(_horizontalHints[r].first.begin(), _horizontalHints[r].first.end(),
 			std::ostream_iterator<int>(ss, " "));
 		_horizontalHints[r].second = ss.str();
+		// _horizontalHints[r].second.substr(0, _horizontalHints[r].second.length() - 1);
+		if (_horizontalHints[r].second.length() > horiDisp)
+			horiDisp = _horizontalHints[r].second.length();
 	}
 
 	// vertical hints
@@ -94,7 +99,12 @@ void GameGrid::CreateNewAnswer() {
 		std::copy(_verticalHints[c].first.begin(), _verticalHints[c].first.end(),
 			std::ostream_iterator<int>(ss, "\n\n"));
 		_verticalHints[c].second = ss.str();
+		if (_verticalHints[c].second.length() > vertDisp)
+			vertDisp = _verticalHints[c].second.length();
 	}
+
+	horiDisp *= tSize;
+	vertDisp *= tSize / 2;
 
 	// cout2DVec<int>(_horizontalHints);
 	// cout2DVec<int>(_verticalHints);
@@ -146,20 +156,15 @@ void Game::Update(olc::PixelGameEngine* engine) {
 				_mouseDown = true;
 			}
 		}
-		else {
-			// WIP
+		else if (rightHeld) {
 			t.active = false;
-			if (_mouseDown) {
-				t.active = static_cast<int>(_mouseActiveState);
-				(t.active) ? t.state = TileState::FILLED : t.state = TileState::EMPTY;
-			}
+			if (_mouseDown) t.state = _mouseActiveState;
 			else {
-				_mouseActiveState = static_cast<TileState>(!t.active);
+				(t.state == TileState::FLAGGED) ?
+					_mouseActiveState = TileState::EMPTY : 
+					_mouseActiveState = TileState::FLAGGED;
 				_mouseDown = true;
 			}
-			(t.state == TileState::FLAGGED) ? t.state = TileState::EMPTY : 
-				t.state = TileState::FLAGGED;
-			_mouseDown = true;
 		}
 
 	}
@@ -194,14 +199,22 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 	// draw horizontal hints
 	int stringSpacing = (gameGrid.tiles[0].tSize);
 	for (int h = 0; h < gameGrid._horizontalHints.size(); h++) {
-		engine->DrawStringDecal({gameGrid.pos.x - 50, gameGrid.pos.y + h * stringSpacing },
-			gameGrid._horizontalHints[h].second, olc::BLACK);
+		engine->DrawStringDecal({gameGrid.pos.x - gameGrid.horiDisp, 
+			gameGrid.pos.y + h * stringSpacing + (h / 5)}, gameGrid._horizontalHints[h].second,
+			olc::BLACK);
+		engine->DrawRectDecal({ gameGrid.pos.x - gameGrid.horiDisp,
+			gameGrid.pos.y + h * stringSpacing + (h / 5)}, {(float)gameGrid.horiDisp, (float)gameGrid.tSize},
+			olc::BLACK);
 	}
 
 	// draw vertical hints
 	for (int v = 0; v < gameGrid._verticalHints.size(); v++) {
-		engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing, gameGrid.pos.y - 50},
-			gameGrid._verticalHints[v].second, olc::BLACK);
+		engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing, 
+			gameGrid.pos.y - gameGrid.vertDisp}, gameGrid._verticalHints[v].second,
+			olc::BLACK);
+		engine->DrawRectDecal({ gameGrid.pos.x + v * stringSpacing + (v / 5),
+			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
+			olc::BLACK);
 	}
 }
 
