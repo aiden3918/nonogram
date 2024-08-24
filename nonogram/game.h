@@ -145,6 +145,7 @@ public:
 private:
 	bool _mouseDown;
 	bool _mouseActiveState;
+	bool _matchAnswer();
 	
 };
 

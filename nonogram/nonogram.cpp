@@ -19,6 +19,7 @@ public:
         _game = new Game();
         _game->gameGrid.pos = { 100, 100 };
         _game->NewGame(10, 10);
+        _game->NewGame(5, 10);
         return true;
     }
 

@@ -1,5 +1,6 @@
 #include "game.h"
 
+
 Game::Game() {}
 Game::~Game() {}
 
@@ -21,11 +22,13 @@ void Game::Update(olc::PixelGameEngine* engine) {
 		if (checkPtCollision(mousePos, t.hitbox)) {
 			if (_mouseDown) {
 				t.active = _mouseActiveState;
+				std::cout << t.r << ", " << t.c << std::endl;
 			}
 			else {
 				_mouseActiveState = !t.active;
 				_mouseDown = true;
 			}
+			if (_matchAnswer()) std::cout << "win" << std::endl;
 		}
 	}
 }
@@ -36,7 +39,18 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 		std::to_string(mousePos.y), olc::BLACK);
 
 	for (GameTile& t : gameGrid.tiles) {
-		(t.active) ? engine->FillRectDecal({ t.pos.x, t.pos.y }, { (float)t.tSize, (float)t.tSize }, olc::BLACK) : 
-			engine->DrawRectDecal({ t.pos.x, t.pos.y }, { (float)t.tSize, (float)t.tSize }, olc::BLACK);
+		engine->DrawRectDecal({ t.pos.x, t.pos.y }, { (float)t.tSize, (float)t.tSize }, 
+			olc::BLACK);
+		if (t.active) engine->FillRectDecal({ t.pos.x, t.pos.y }, 
+			{ (float)t.tSize, (float)t.tSize }, olc::BLACK);
+			
 	}
+}
+
+// DEBUG: vector subscript out of range
+inline bool Game::_matchAnswer() {
+	for (GameTile& t : gameGrid.tiles) {
+		if (gameGrid.answer[t.r][t.c] != t.active) return false;
+	}
+	return true;
 }
