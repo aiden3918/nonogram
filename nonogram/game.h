@@ -10,8 +10,24 @@
 
 struct GameTile {
 	vec2D pos;
-	int tileSize;
+	AABB hitbox;
+	int tSize;
 	bool active;
+	int r; // "y" value
+	int c; // "x" value
+
+	GameTile() {}
+	GameTile(const vec2D& gridPos, const int& tileSize, const int& row, const int& column,
+		bool isActive = false)
+	{
+		tSize = tileSize;
+		r = row;
+		c = column;
+		active = isActive;
+		pos = gridPos + (vec2D(c, r) * tSize) + vec2D(c / 5, r / 5);
+		hitbox = { pos, pos + vec2D(tSize, tSize) };
+	}
+	~GameTile() {}
 };
 
 struct GameGrid {
@@ -21,11 +37,13 @@ struct GameGrid {
 	std::vector<std::vector<int>> _verticalHints; // sides that give hints (element 0 is horizntal, element 1 is vertical)
 	std::vector<std::vector<bool>> answer;
 
-	vec2D gameTilesPos; // top-left of where clickable tiles starts
+	vec2D pos; // top-left of where clickable tiles starts
 	int tSize;
 
 	// init with tiles
 	void Clear(const int& numTiles, const int& tileSize = 5) {
+		tiles.clear();
+
 		answer.clear();
 		_horizontalHints.clear();
 		_verticalHints.clear();
@@ -41,7 +59,7 @@ struct GameGrid {
 	}
 
 	// randomize board
-	void NewBoard() {
+	void CreateNewAnswer() {
 		srand(time(NULL));
 		std::vector<bool> emptyRow;
 		emptyRow.resize(answer[0].size(), 0);
@@ -100,6 +118,18 @@ struct GameGrid {
 		cout2DVec<int>(_verticalHints);
 		cout2DVec<bool>(answer);
 	}
+
+	void CreateBoard() {
+		tiles.clear();
+		tiles.resize(answer.size());
+
+		for (int r = 0; r < answer.size(); r++) {
+			for (int c = 0; c < answer[r].size(); c++) {
+				GameTile tile = GameTile(pos, tSize, r, c);
+				tiles.push_back(tile);
+			}
+		}
+	}
 };
 
 class Game {
@@ -107,10 +137,14 @@ public:
 	Game();
 	~Game();
 
-	void NewGame();
+	void NewGame(int numTiles = 5, int tileSize = 5);
+	void Update(olc::PixelGameEngine* engine);
+	void Draw(olc::PixelGameEngine* engine);
 
+	GameGrid gameGrid;
 private:
-	GameGrid _gameGrid;
+	bool _mouseDown;
+	bool _mouseActiveState;
 	
 };
 

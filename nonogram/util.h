@@ -108,4 +108,11 @@ void cout2DVec(std::vector<std::vector<T>> v) {
 	}
 }
 
+inline bool checkPtCollision(vec2D pt, AABB hb) {
+	if (pt.x < hb.min.x || pt.x > hb.max.x) return false;
+	if (pt.y < hb.min.y || pt.y > hb.max.y) return false;
+
+	return true;
+}
+
 #endif // !util_h
