@@ -56,7 +56,7 @@ public:
 	GameGrid gameGrid;
 private:
 	bool _mouseDown;
-	bool _mouseActiveState;
+	TileState _mouseActiveState;
 	
 	bool _matchesAnswer();
 	

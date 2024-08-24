@@ -138,17 +138,27 @@ void Game::Update(olc::PixelGameEngine* engine) {
 
 		if (leftHeld) {
 			if (_mouseDown) {
-				t.active = _mouseActiveState;
+				t.active = static_cast<int>(_mouseActiveState);
 				(t.active) ? t.state = TileState::FILLED : t.state = TileState::EMPTY;
 			}
 			else {
-				_mouseActiveState = !t.active;
+				_mouseActiveState = static_cast<TileState>(!t.active);
 				_mouseDown = true;
 			}
 		}
 		else {
+			// WIP
 			t.active = false;
-			t.state = TileState::FLAGGED;
+			if (_mouseDown) {
+				t.active = static_cast<int>(_mouseActiveState);
+				(t.active) ? t.state = TileState::FILLED : t.state = TileState::EMPTY;
+			}
+			else {
+				_mouseActiveState = static_cast<TileState>(!t.active);
+				_mouseDown = true;
+			}
+			(t.state == TileState::FLAGGED) ? t.state = TileState::EMPTY : 
+				t.state = TileState::FLAGGED;
 			_mouseDown = true;
 		}
 
