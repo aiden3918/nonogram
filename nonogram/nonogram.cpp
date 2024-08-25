@@ -17,11 +17,12 @@ public:
 
 public:
     bool OnUserCreate() override {
+        vec2D screenCenter = GetScreenSize() / 2.0f;
+
         srand(time(NULL));
 
         _game = new Game();
-        _game->gameGrid.pos = { 100, 100 };
-        _game->NewGame(10, 10);
+        _game->NewGame(screenCenter, 10, 10);
         _game->InitUI();
         // _game->NewGame(5, 10);
         return true;

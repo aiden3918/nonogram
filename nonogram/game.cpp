@@ -13,7 +13,7 @@ GameTile::GameTile(const vec2D& gridPos, const int& tileSize, const int& row, co
 }
 GameTile::~GameTile() {}
 
-void GameGrid::Clear(const int& numTiles, const int& tileSize) {
+void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& tileSize) {
 	horiDisp = 0;
 	vertDisp = 0;
 	tiles.clear();
@@ -30,8 +30,11 @@ void GameGrid::Clear(const int& numTiles, const int& tileSize) {
 	_verticalHints.resize(numTiles);
 
 	cout2DVec<bool>(answer);
-	gameTilesDimensions = { pos, {pos.x + (answer[0].size() * tSize) + (answer[0].size() / 5),
-		pos.y + (answer.size() * tSize) + (answer.size() / 5)  } };
+	gridSize = vec2D(int((answer[0].size() * tSize) + (answer[0].size() / 5)),
+		int((answer.size() * tSize) + (answer.size() / 5)));
+	center = screenCenter;
+	pos = screenCenter - (gridSize / 2.0f);
+	gameTilesDimensions = { pos, pos + gridSize };
 }
 
 void GameGrid::CreateNewAnswer() {
@@ -127,8 +130,8 @@ void GameGrid::CreateBoard() {
 Game::Game() {}
 Game::~Game() {}
 
-void Game::NewGame(int numTiles, int tileSize) {
-	gameGrid.Clear(numTiles, tileSize);
+void Game::NewGame(const vec2D& screenCenter, int numTiles, int tileSize) {
+	gameGrid.Clear(screenCenter, numTiles, tileSize);
 	gameGrid.CreateNewAnswer();
 	gameGrid.CreateBoard();
 
@@ -137,12 +140,13 @@ void Game::NewGame(int numTiles, int tileSize) {
 
 void Game::Update(olc::PixelGameEngine* engine) {
 	_guiManager.Update(engine);
-	vec2D mousePos = { engine->GetMouseX(), engine->GetMouseY() };
+	vec2D mousePos = engine->GetMousePos();
 
 	if (_clearBtn->bPressed) _clearGameGrid();
 	if (_newGameBtn->bPressed) {
 		_clearGameGrid();
-		NewGame(gameGrid.answer[0].size(), gameGrid.tSize);
+		NewGame(engine->GetScreenSize() / 2, 
+			gameGrid.answer[0].size(), gameGrid.tSize);
 	}
 
 	bool leftHeld = engine->GetMouse(olc::Mouse::LEFT).bHeld;
@@ -182,7 +186,7 @@ void Game::Update(olc::PixelGameEngine* engine) {
 }
 
 void Game::Draw(olc::PixelGameEngine* engine) {
-	vec2D mousePos = { engine->GetMouseX(), engine->GetMouseY() };
+	vec2D mousePos = vec2D(engine->GetMousePos());
 	engine->DrawStringDecal({ 5.0f, 5.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
 		std::to_string(mousePos.y), olc::BLACK);
 

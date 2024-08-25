@@ -34,12 +34,13 @@ struct GameGrid {
 	int horiDisp, vertDisp;
 	AABB gameTilesDimensions;
 
-
 	vec2D pos; // top-left of where clickable tiles starts
 	int tSize;
+	vec2D center;
+	vec2D gridSize;
 
 	// init with tiles
-	void Clear(const int& numTiles, const int& tileSize = 5);
+	void Clear(const vec2D& screenCenter, const int& numTiles, const int& tileSize = 5);
 	// randomize board
 	void CreateNewAnswer();
 	void CreateBoard();
@@ -50,7 +51,7 @@ public:
 	Game();
 	~Game();
 
-	void NewGame(int numTiles = 5, int tileSize = 5);
+	void NewGame(const vec2D& screenCenter, int numTiles = 5, int tileSize = 5);
 	void Update(olc::PixelGameEngine* engine);
 	void Draw(olc::PixelGameEngine* engine);
 	void InitUI();

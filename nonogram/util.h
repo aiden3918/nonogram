@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <math.h>
+#include "olcPixelGameEngine.h"
 
 #define PI 3.14159f
 #define TINY_FLOAT 0.0001f
@@ -19,8 +20,12 @@ struct vec2D {
 	vec2D() {}
 	vec2D(const float& a, const float& b) { x = a; y = b; }
 	vec2D(const int& a, const int& b) { x = (float)a; y = (float)b; }
+	vec2D(const olc::vi2d& vi2d) { x = (float)vi2d.x; y = (float)vi2d.y; }
+	vec2D(const olc::vf2d& vf2d) { x = vf2d.x; y = vf2d.y; }
 	~vec2D() {}
 
+	vec2D& operator = (const olc::vf2d& rhs) { this->x = rhs.x; this->y = rhs.y; return *this; }
+	vec2D& operator = (const olc::vi2d& rhs) { this->x = (float)rhs.x; this->y = (float)rhs.y; return *this; }
 	bool operator == (const vec2D& rhs) const { return (this->x == rhs.x && this->y == rhs.y); }
 	vec2D operator + (const vec2D& rhs) const { return { this->x + rhs.x, this->y + rhs.y };  }
 	vec2D operator - (const vec2D& rhs) const { return { this->x - rhs.x, this->y - rhs.y }; }
