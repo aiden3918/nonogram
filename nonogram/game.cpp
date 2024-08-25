@@ -212,8 +212,8 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 	// draw horizontal hints
 	int stringSpacing = (gameGrid.tiles[0].tSize);
 	for (int h = 0; h < gameGrid._horizontalHints.size(); h++) {
-		engine->DrawStringDecal({gameGrid.pos.x - gameGrid.horiDisp, 
-			gameGrid.pos.y + h * stringSpacing + (h / 5)}, gameGrid._horizontalHints[h].second,
+		engine->DrawStringDecal({gameGrid.pos.x - gameGrid.horiDisp + 3, 
+			gameGrid.pos.y + h * stringSpacing + (h / 5) + 3}, gameGrid._horizontalHints[h].second,
 			olc::BLACK);
 		engine->DrawRectDecal({ gameGrid.pos.x - gameGrid.horiDisp,
 			gameGrid.pos.y + h * stringSpacing + (h / 5)}, {(float)gameGrid.horiDisp, (float)gameGrid.tSize},
@@ -222,8 +222,8 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 
 	// draw vertical hints
 	for (int v = 0; v < gameGrid._verticalHints.size(); v++) {
-		engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing, 
-			gameGrid.pos.y - gameGrid.vertDisp}, gameGrid._verticalHints[v].second,
+		engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3, 
+			gameGrid.pos.y - gameGrid.vertDisp + 3}, gameGrid._verticalHints[v].second,
 			olc::BLACK);
 		engine->DrawRectDecal({ gameGrid.pos.x + v * stringSpacing + (v / 5),
 			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
@@ -235,18 +235,18 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 
 void Game::InitUI() {
 	_clearBtn = new olc::QuickGUI::Button(_guiManager, "Clear",
-		{ gameGrid.gameTilesDimensions.min.x, gameGrid.gameTilesDimensions.max.y }, 
+		{ gameGrid.gameTilesDimensions.min.x - gameGrid.horiDisp, gameGrid.gameTilesDimensions.max.y }, 
 		{ 50.0f, 30.0f });
 	_newGameBtn = new olc::QuickGUI::Button(_guiManager, "New Game",
-		{ gameGrid.gameTilesDimensions.min.x + 60.0f, gameGrid.gameTilesDimensions.max.y }, 
+		{ gameGrid.gameTilesDimensions.min.x + 60.0f - gameGrid.horiDisp, gameGrid.gameTilesDimensions.max.y },
 		{ 80.0f, 30.0f });
 	_showCorrectLabel = new olc::QuickGUI::Label(_guiManager, "Show Correct Rows/Cols",
-		{ gameGrid.gameTilesDimensions.min.x + 150.0f,
+		{ gameGrid.gameTilesDimensions.min.x + 150.0f - gameGrid.horiDisp,
 		gameGrid.gameTilesDimensions.max.y }, { 160.0f, 30.0f });
 	_showCorrectLabel->bHasBackground = true;
 	_showCorrectLabel->bHasBorder = true;
 	_showCorrectCB = new olc::QuickGUI::CheckBox(_guiManager, "",
-		false, { gameGrid.gameTilesDimensions.min.x + 310.0f, 
+		false, { gameGrid.gameTilesDimensions.min.x + 310.0f - gameGrid.horiDisp,
 		gameGrid.gameTilesDimensions.max.y + 5.0f}, { 20.0f, 20.0f });
 }
 

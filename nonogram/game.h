@@ -10,6 +10,7 @@
 #include "olcPGEX_QuickGUI.h"
 
 const enum class TileState {EMPTY = 0, FILLED = 1, FLAGGED = 2};
+const enum class GameState {MENU, PLAYING, WIN};
 
 struct GameTile {
 	vec2D pos;
