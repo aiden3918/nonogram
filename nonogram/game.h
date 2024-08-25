@@ -32,16 +32,16 @@ struct GameGrid {
 	std::vector<std::pair<std::vector<int>, std::string>> _horizontalHints, _verticalHints;
 	std::vector<std::vector<bool>> answer;
 	int horiDisp, vertDisp;
+	AABB gameTilesDimensions;
+
 
 	vec2D pos; // top-left of where clickable tiles starts
 	int tSize;
 
 	// init with tiles
 	void Clear(const int& numTiles, const int& tileSize = 5);
-
 	// randomize board
 	void CreateNewAnswer();
-
 	void CreateBoard();
 };
 
@@ -53,13 +53,21 @@ public:
 	void NewGame(int numTiles = 5, int tileSize = 5);
 	void Update(olc::PixelGameEngine* engine);
 	void Draw(olc::PixelGameEngine* engine);
+	void InitUI();
 
 	GameGrid gameGrid;
 private:
 	bool _mouseDown;
 	TileState _mouseActiveState;
+
+	olc::QuickGUI::Manager _guiManager;
+	olc::QuickGUI::Button* _clearBtn = nullptr;
+	olc::QuickGUI::Button* _newGameBtn = nullptr;
+	olc::QuickGUI::Label* _showCorrectLabel = nullptr;
+	olc::QuickGUI::CheckBox* _showCorrectCB = nullptr;
 	
 	bool _matchesAnswer();
+	inline void _clearGameGrid();
 	
 };
 

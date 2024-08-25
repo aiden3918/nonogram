@@ -30,6 +30,8 @@ void GameGrid::Clear(const int& numTiles, const int& tileSize) {
 	_verticalHints.resize(numTiles);
 
 	cout2DVec<bool>(answer);
+	gameTilesDimensions = { pos, {pos.x + (answer[0].size() * tSize) + (answer[0].size() / 5),
+		pos.y + (answer.size() * tSize) + (answer.size() / 5)  } };
 }
 
 void GameGrid::CreateNewAnswer() {
@@ -134,7 +136,14 @@ void Game::NewGame(int numTiles, int tileSize) {
 }
 
 void Game::Update(olc::PixelGameEngine* engine) {
+	_guiManager.Update(engine);
 	vec2D mousePos = { engine->GetMouseX(), engine->GetMouseY() };
+
+	if (_clearBtn->bPressed) _clearGameGrid();
+	if (_newGameBtn->bPressed) {
+		_clearGameGrid();
+		NewGame(gameGrid.answer[0].size(), gameGrid.tSize);
+	}
 
 	bool leftHeld = engine->GetMouse(olc::Mouse::LEFT).bHeld;
 	bool rightHeld = engine->GetMouse(olc::Mouse::RIGHT).bHeld;
@@ -216,12 +225,37 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
 			olc::BLACK);
 	}
+
+	_guiManager.Draw(engine);
 }
 
-// DEBUG: vector subscript out of range
+void Game::InitUI() {
+	_clearBtn = new olc::QuickGUI::Button(_guiManager, "Clear",
+		{ gameGrid.gameTilesDimensions.min.x, gameGrid.gameTilesDimensions.max.y }, 
+		{ 50.0f, 30.0f });
+	_newGameBtn = new olc::QuickGUI::Button(_guiManager, "New Game",
+		{ gameGrid.gameTilesDimensions.min.x + 60.0f, gameGrid.gameTilesDimensions.max.y }, 
+		{ 80.0f, 30.0f });
+	_showCorrectLabel = new olc::QuickGUI::Label(_guiManager, "Show Correct Rows/Cols",
+		{ gameGrid.gameTilesDimensions.min.x + 150.0f,
+		gameGrid.gameTilesDimensions.max.y }, { 160.0f, 30.0f });
+	_showCorrectLabel->bHasBackground = true;
+	_showCorrectLabel->bHasBorder = true;
+	_showCorrectCB = new olc::QuickGUI::CheckBox(_guiManager, "",
+		false, { gameGrid.gameTilesDimensions.min.x + 310.0f, 
+		gameGrid.gameTilesDimensions.max.y + 5.0f}, { 20.0f, 20.0f });
+}
+
 inline bool Game::_matchesAnswer() {
 	for (GameTile& t : gameGrid.tiles) {
 		if (gameGrid.answer[t.r][t.c] != t.active) return false;
 	}
 	return true;
+}
+
+inline void Game::_clearGameGrid() {
+	for (GameTile& t : gameGrid.tiles) {
+		t.active = false;
+		t.state = TileState::EMPTY;
+	}
 }

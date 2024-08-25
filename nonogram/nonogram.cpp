@@ -22,13 +22,12 @@ public:
         _game = new Game();
         _game->gameGrid.pos = { 100, 100 };
         _game->NewGame(10, 10);
+        _game->InitUI();
         // _game->NewGame(5, 10);
         return true;
     }
 
     bool OnUserUpdate(float fElapsedTime) override {
-        if (GetMouse(olc::Mouse::LEFT).bPressed) std::cout << "m1" << std::endl;
-        if (GetMouse(olc::Mouse::RIGHT).bPressed) std::cout << "m2" << std::endl;
         Clear(olc::WHITE);
         _game->Update(this);
         _game->Draw(this);
