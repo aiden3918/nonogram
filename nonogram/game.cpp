@@ -14,6 +14,7 @@ GameTile::GameTile(const vec2D& gridPos, const int& tileSize, const int& row, co
 GameTile::~GameTile() {}
 
 void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& tileSize) {
+
 	horiDisp = 0;
 	vertDisp = 0;
 	tiles.clear();
@@ -35,25 +36,28 @@ void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& 
 	center = screenCenter;
 	pos = screenCenter - (gridSize / 2.0f);
 	gameTilesDimensions = { pos, pos + gridSize };
+
 }
 
 void GameGrid::CreateNewAnswer() {
 	srand(time(NULL));
 	std::vector<bool> emptyRow;
-	emptyRow.resize(answer[0].size(), 0);
+	int cols = answer[0].size();
+	int rows = answer.size();
+	emptyRow.resize(cols, 0);
 
-	for (int r = 0; r < answer.size(); r++) {
+	for (int r = 0; r < rows; r++) {
 		int rowHintIndex = 0;
 		horizontalHints[r].vec.push_back(0);
 
 		// randomize row
-		for (int c = 0; c < answer[r].size(); c++) answer[r][c] = rand() % 2;
+		for (int c = 0; c < cols; c++) answer[r][c] = rand() % 2;
 
 		// if row is empty, add a one in there somewhere
 		if (answer[r] == emptyRow) answer[r][rand() % emptyRow.size()] == 1;
 
 		// side hints (horizontal)
-		for (int c = 0; c < answer[r].size(); c++) {
+		for (int c = 0; c < cols; c++) {
 			switch (answer[r][c]) {
 			case 0: {
 				if (horizontalHints[r].vec[rowHintIndex] != 0) {
@@ -77,6 +81,20 @@ void GameGrid::CreateNewAnswer() {
 		// _horizontalHints[r].second.substr(0, _horizontalHints[r].second.length() - 1);
 		if (horizontalHints[r].str.length() > horiDisp)
 			horiDisp = horizontalHints[r].str.length();
+	}
+
+	// check for empty columns
+	// would be easier to just insert a random 1 somewhere no matter what, but init
+	// is called only once per game so why not use some extra cpu power :)
+	for (int c = 0; c < cols; c++) {
+		bool emptyCol = true;
+		for (int r = 0; r < rows; r++) {
+			if (answer[r][c] != 0) {
+				emptyCol = false;
+				break;
+			}
+		}
+		if (emptyCol) answer[rand() % rows][c] = 1;
 	}
 
 	// vertical hints
@@ -131,16 +149,26 @@ Game::Game() {}
 Game::~Game() {}
 
 void Game::NewGame(const vec2D& screenCenter, int numTiles, int tileSize) {
+
+	gameState = GameState::PLAYING;
+
 	gameGrid.Clear(screenCenter, numTiles, tileSize);
 	gameGrid.CreateNewAnswer();
 	gameGrid.CreateBoard();
 
+	_winStrPos = vec2D(screenCenter.x - 20.0f, gameGrid.gameTilesDimensions.max.y + 40.0f);
+
+	_stopwatch = 0.0f;
+	_stopwatchPos = vec2D(screenCenter.x, gameGrid.pos.y - gameGrid.vertDisp - 20.0f);
+
 	std::cout << gameGrid.tiles.size() << std::endl;
 }
 
-void Game::Update(olc::PixelGameEngine* engine) {
+void Game::Update(olc::PixelGameEngine* engine, float& fElapsedTime) {
 	_guiManager.Update(engine);
 	vec2D mousePos = engine->GetMousePos();
+
+	if (gameState == GameState::PLAYING) _stopwatch += fElapsedTime;
 
 	if (_clearBtn->bPressed) _clearGameGrid();
 	if (_newGameBtn->bPressed) {
@@ -182,13 +210,22 @@ void Game::Update(olc::PixelGameEngine* engine) {
 
 	}
 
-	if (_matchesAnswer()) std::cout << "win" << std::endl;
+	if (_matchesAnswer()) gameState = GameState::WIN;
 }
 
 void Game::Draw(olc::PixelGameEngine* engine) {
 	vec2D mousePos = vec2D(engine->GetMousePos());
 	engine->DrawStringDecal({ 5.0f, 5.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
 		std::to_string(mousePos.y), olc::BLACK);
+
+	// draw timer
+	std::string hrStr = std::to_string(int(_stopwatch / 3600.0f));
+	std::string minStr = std::to_string(int(_stopwatch / 60.0f) % 60);
+	if (minStr.length() < 2) minStr.insert(0, "0");
+	std::string secStr = std::to_string(int(_stopwatch) % 60);
+	if (secStr.length() < 2) secStr.insert(0, "0");
+	engine->DrawStringDecal({ _stopwatchPos.x - 25.0f, _stopwatchPos.y }, 
+		hrStr + ":" + minStr + ":" + secStr, olc::BLACK);
 
 	// draw game tiles
 	for (GameTile& t : gameGrid.tiles) {
@@ -250,6 +287,9 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 		olc::BLACK);
 	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
 	_guiManager.Draw(engine);
+
+	if (gameState == GameState::WIN) engine->DrawStringDecal({ _winStrPos.x, _winStrPos.y }, 
+		"Win!", olc::GREEN, {2.0f, 2.0f});
 }
 
 void Game::InitUI() {
