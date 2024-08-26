@@ -1,6 +1,3 @@
-// nonogram.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
@@ -22,13 +19,14 @@ public:
         srand(time(NULL));
 
         _game = new Game();
-        _game->NewGame(screenCenter, 5, 15);
         _game->InitUI();
+        _game->NewGame(screenCenter, 5, 15);
         // _game->NewGame(5, 10);
         return true;
     }
 
     bool OnUserUpdate(float fElapsedTime) override {
+
         Clear(olc::WHITE);
         _game->Update(this, fElapsedTime);
         _game->Draw(this);

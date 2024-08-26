@@ -71,12 +71,15 @@ private:
 	vec2D _winStrPos;
 	float _stopwatch;
 	vec2D _stopwatchPos;
+	vec2D _hintStrScale = { 1.0f, 1.0f };
 
 	olc::QuickGUI::Manager _guiManager;
 	olc::QuickGUI::Button* _clearBtn = nullptr;
 	olc::QuickGUI::Button* _newGameBtn = nullptr;
 	olc::QuickGUI::Label* _showCorrectLabel = nullptr;
 	olc::QuickGUI::CheckBox* _showCorrectCB = nullptr;
+	std::vector<std::string> _boardSizesStr = { "5x5", "10x10", "15x15", "20x20" };
+	olc::QuickGUI::ListBox* _boardSizeDropdown = nullptr;
 	
 	bool _matchesAnswer();
 	inline void _clearGameGrid();

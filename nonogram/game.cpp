@@ -34,7 +34,8 @@ void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& 
 	gridSize = vec2D(int((answer[0].size() * tSize) + (answer[0].size() / 5)),
 		int((answer.size() * tSize) + (answer.size() / 5)));
 	center = screenCenter;
-	pos = screenCenter - (gridSize / 2.0f);
+	if (numTiles > 10) center.y *= 1.3f;
+	pos = center - (gridSize / 2.0f);
 	gameTilesDimensions = { pos, pos + gridSize };
 
 }
@@ -126,7 +127,7 @@ void GameGrid::CreateNewAnswer() {
 			vertDisp = verticalHints[c].str.length();
 	}
 
-	horiDisp *= tSize;
+	horiDisp *= tSize / 1.5f;
 	vertDisp *= tSize / 2;
 
 	// cout2DVec<int>(_horizontalHints);
@@ -161,6 +162,15 @@ void Game::NewGame(const vec2D& screenCenter, int numTiles, int tileSize) {
 	_stopwatch = 0.0f;
 	_stopwatchPos = vec2D(screenCenter.x, gameGrid.pos.y - gameGrid.vertDisp - 20.0f);
 
+	_clearBtn->vPos = { gameGrid.gameTilesDimensions.min.x - gameGrid.horiDisp, 
+		gameGrid.gameTilesDimensions.max.y };
+	_newGameBtn->vPos = { gameGrid.gameTilesDimensions.min.x + 60.0f - gameGrid.horiDisp,
+		gameGrid.gameTilesDimensions.max.y };
+	_showCorrectLabel->vPos = { gameGrid.gameTilesDimensions.min.x + 150.0f - gameGrid.horiDisp,
+		gameGrid.gameTilesDimensions.max.y };
+	_showCorrectCB->vPos = { gameGrid.gameTilesDimensions.min.x + 310.0f - gameGrid.horiDisp, 
+		gameGrid.gameTilesDimensions.max.y + 5.0f };
+
 	std::cout << gameGrid.tiles.size() << std::endl;
 }
 
@@ -175,6 +185,19 @@ void Game::Update(olc::PixelGameEngine* engine, float& fElapsedTime) {
 		_clearGameGrid();
 		NewGame(engine->GetScreenSize() / 2, 
 			gameGrid.answer[0].size(), gameGrid.tSize);
+		return;
+	}
+
+	if (_boardSizeDropdown->nPreviouslySelectedItem != _boardSizeDropdown->nSelectedItem) {
+		int numTiles = (_boardSizeDropdown->nSelectedItem + 1) * 5;
+		int tileSize = 15;
+		//_hintStrScale = vec2D(1.0f, 1.0f);
+		//if (_boardSizeDropdown->nSelectedItem > 1) {
+		//	tileSize = 10;
+		//	_hintStrScale = vec2D(0.8f, 0.8f);
+		//};
+		NewGame(engine->GetScreenSize() / 2, numTiles, tileSize);
+		return;
 	}
 
 	bool leftHeld = engine->GetMouse(olc::Mouse::LEFT).bHeld;
@@ -215,8 +238,11 @@ void Game::Update(olc::PixelGameEngine* engine, float& fElapsedTime) {
 
 void Game::Draw(olc::PixelGameEngine* engine) {
 	vec2D mousePos = vec2D(engine->GetMousePos());
-	engine->DrawStringDecal({ 5.0f, 5.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
+	engine->DrawStringDecal({ 5.0f, 550.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
 		std::to_string(mousePos.y), olc::BLACK);
+	engine->FillRectDecal({ 0.0f, 0.0f }, { (float)engine->GetScreenSize().x, {50.0f} },
+		olc::BLACK);
+	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
 
 	// draw timer
 	std::string hrStr = std::to_string(int(_stopwatch / 3600.0f));
@@ -249,16 +275,17 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 	// draw horizontal hints
 	int stringSpacing = (gameGrid.tiles[0].tSize);
 
+	olc::vf2d strScale = { _hintStrScale.x, _hintStrScale.y };
 	for (int h = 0; h < gameGrid.horizontalHints.size(); h++) {
 		if (gameGrid.horizontalHints[h].correct && _showCorrectCB->bChecked) {
 			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
 				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 }, 
-				gameGrid.horizontalHints[h].str, olc::GREEN);
+				gameGrid.horizontalHints[h].str, olc::GREEN, strScale);
 		} 
 		else {
 			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
 				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 },
-				gameGrid.horizontalHints[h].str, olc::BLACK);
+				gameGrid.horizontalHints[h].str, olc::BLACK, strScale);
 		}
 
 		engine->DrawRectDecal({ gameGrid.pos.x - gameGrid.horiDisp,
@@ -271,25 +298,23 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 		if (gameGrid.verticalHints[v].correct && _showCorrectCB->bChecked) {
 			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
 				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
-				olc::GREEN);
+				olc::GREEN, strScale);
 		}
 		else {
 			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
 				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
-				olc::BLACK);
+				olc::BLACK, strScale);
 		}
 		engine->DrawRectDecal({ gameGrid.pos.x + v * stringSpacing + (v / 5),
 			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
 			olc::BLACK);
 	}
 
-	engine->FillRectDecal({ 0.0f, 0.0f }, { (float)engine->GetScreenSize().x, {50.0f} }, 
-		olc::BLACK);
-	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
-	_guiManager.Draw(engine);
-
 	if (gameState == GameState::WIN) engine->DrawStringDecal({ _winStrPos.x, _winStrPos.y }, 
 		"Win!", olc::GREEN, {2.0f, 2.0f});
+
+	_guiManager.DrawDecal(engine);
+
 }
 
 void Game::InitUI() {
@@ -307,6 +332,8 @@ void Game::InitUI() {
 	_showCorrectCB = new olc::QuickGUI::CheckBox(_guiManager, "",
 		false, { gameGrid.gameTilesDimensions.min.x + 310.0f - gameGrid.horiDisp,
 		gameGrid.gameTilesDimensions.max.y + 5.0f}, { 20.0f, 20.0f });
+	_boardSizeDropdown = new olc::QuickGUI::ListBox(_guiManager, _boardSizesStr,
+		{ 550.0f, 10.0f }, { 70.0f, 30.0f });
 }
 
 inline bool Game::_matchesAnswer() {
