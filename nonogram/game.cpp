@@ -19,15 +19,15 @@ void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& 
 	tiles.clear();
 
 	answer.clear();
-	_horizontalHints.clear();
-	_verticalHints.clear();
+	horizontalHints.clear();
+	verticalHints.clear();
 
 	answer.resize(numTiles);
 	tSize = tileSize;
 	for (std::vector<bool>& v : answer) v.resize(numTiles, false);
 
-	_horizontalHints.resize(numTiles);
-	_verticalHints.resize(numTiles);
+	horizontalHints.resize(numTiles);
+	verticalHints.resize(numTiles);
 
 	cout2DVec<bool>(answer);
 	gridSize = vec2D(int((answer[0].size() * tSize) + (answer[0].size() / 5)),
@@ -44,7 +44,7 @@ void GameGrid::CreateNewAnswer() {
 
 	for (int r = 0; r < answer.size(); r++) {
 		int rowHintIndex = 0;
-		_horizontalHints[r].first.push_back(0);
+		horizontalHints[r].vec.push_back(0);
 
 		// randomize row
 		for (int c = 0; c < answer[r].size(); c++) answer[r][c] = rand() % 2;
@@ -56,56 +56,56 @@ void GameGrid::CreateNewAnswer() {
 		for (int c = 0; c < answer[r].size(); c++) {
 			switch (answer[r][c]) {
 			case 0: {
-				if (_horizontalHints[r].first[rowHintIndex] != 0) {
+				if (horizontalHints[r].vec[rowHintIndex] != 0) {
 					rowHintIndex++;
-					_horizontalHints[r].first.push_back(0);
+					horizontalHints[r].vec.push_back(0);
 				}
 				break;
 			}
-			case 1: _horizontalHints[r].first[rowHintIndex]++; break;
+			case 1: horizontalHints[r].vec[rowHintIndex]++; break;
 			}
 		}
 
 		// might be a 0 at the end
-		if (_horizontalHints[r].first.back() == 0) _horizontalHints[r].first.pop_back();
+		if (horizontalHints[r].vec.back() == 0) horizontalHints[r].vec.pop_back();
 
 		// turn vector int into string
 		std::stringstream ss;
-		std::copy(_horizontalHints[r].first.begin(), _horizontalHints[r].first.end(),
+		std::copy(horizontalHints[r].vec.begin(), horizontalHints[r].vec.end(),
 			std::ostream_iterator<int>(ss, " "));
-		_horizontalHints[r].second = ss.str();
+		horizontalHints[r].str = ss.str();
 		// _horizontalHints[r].second.substr(0, _horizontalHints[r].second.length() - 1);
-		if (_horizontalHints[r].second.length() > horiDisp)
-			horiDisp = _horizontalHints[r].second.length();
+		if (horizontalHints[r].str.length() > horiDisp)
+			horiDisp = horizontalHints[r].str.length();
 	}
 
 	// vertical hints
 	for (int c = 0; c < answer[0].size(); c++) {
 		int columnHintIndex = 0;
-		_verticalHints[c].first.push_back(0);
+		verticalHints[c].vec.push_back(0);
 
 		for (int r = 0; r < answer.size(); r++) {
 			switch (answer[r][c]) {
 			case 0: {
-				if (_verticalHints[c].first[columnHintIndex] != 0) {
+				if (verticalHints[c].vec[columnHintIndex] != 0) {
 					columnHintIndex++;
-					_verticalHints[c].first.push_back(0);
+					verticalHints[c].vec.push_back(0);
 				}
 				break;
 			}
-			case 1: _verticalHints[c].first[columnHintIndex]++; break;
+			case 1: verticalHints[c].vec[columnHintIndex]++; break;
 			}
 		}
 
-		if (_verticalHints[c].first.back() == 0) _verticalHints[c].first.pop_back();
+		if (verticalHints[c].vec.back() == 0) verticalHints[c].vec.pop_back();
 
 		// turn vector int into string
 		std::stringstream ss;
-		std::copy(_verticalHints[c].first.begin(), _verticalHints[c].first.end(),
+		std::copy(verticalHints[c].vec.begin(), verticalHints[c].vec.end(),
 			std::ostream_iterator<int>(ss, "\n\n"));
-		_verticalHints[c].second = ss.str();
-		if (_verticalHints[c].second.length() > vertDisp)
-			vertDisp = _verticalHints[c].second.length();
+		verticalHints[c].str = ss.str();
+		if (verticalHints[c].str.length() > vertDisp)
+			vertDisp = verticalHints[c].str.length();
 	}
 
 	horiDisp *= tSize;
@@ -211,25 +211,44 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 
 	// draw horizontal hints
 	int stringSpacing = (gameGrid.tiles[0].tSize);
-	for (int h = 0; h < gameGrid._horizontalHints.size(); h++) {
-		engine->DrawStringDecal({gameGrid.pos.x - gameGrid.horiDisp + 3, 
-			gameGrid.pos.y + h * stringSpacing + (h / 5) + 3}, gameGrid._horizontalHints[h].second,
-			olc::BLACK);
+
+	for (int h = 0; h < gameGrid.horizontalHints.size(); h++) {
+		if (gameGrid.horizontalHints[h].correct && _showCorrectCB->bChecked) {
+			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
+				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 }, 
+				gameGrid.horizontalHints[h].str, olc::GREEN);
+		} 
+		else {
+			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
+				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 },
+				gameGrid.horizontalHints[h].str, olc::BLACK);
+		}
+
 		engine->DrawRectDecal({ gameGrid.pos.x - gameGrid.horiDisp,
 			gameGrid.pos.y + h * stringSpacing + (h / 5)}, {(float)gameGrid.horiDisp, (float)gameGrid.tSize},
 			olc::BLACK);
 	}
 
 	// draw vertical hints
-	for (int v = 0; v < gameGrid._verticalHints.size(); v++) {
-		engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3, 
-			gameGrid.pos.y - gameGrid.vertDisp + 3}, gameGrid._verticalHints[v].second,
-			olc::BLACK);
+	for (int v = 0; v < gameGrid.verticalHints.size(); v++) {
+		if (gameGrid.verticalHints[v].correct && _showCorrectCB->bChecked) {
+			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
+				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
+				olc::GREEN);
+		}
+		else {
+			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
+				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
+				olc::BLACK);
+		}
 		engine->DrawRectDecal({ gameGrid.pos.x + v * stringSpacing + (v / 5),
 			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
 			olc::BLACK);
 	}
 
+	engine->FillRectDecal({ 0.0f, 0.0f }, { (float)engine->GetScreenSize().x, {50.0f} }, 
+		olc::BLACK);
+	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
 	_guiManager.Draw(engine);
 }
 
@@ -251,10 +270,20 @@ void Game::InitUI() {
 }
 
 inline bool Game::_matchesAnswer() {
+	bool correct = true;
+
+	for (HintData& h : gameGrid.horizontalHints) h.correct = true;
+	for (HintData& v : gameGrid.horizontalHints) v.correct = true;
+
 	for (GameTile& t : gameGrid.tiles) {
-		if (gameGrid.answer[t.r][t.c] != t.active) return false;
+
+		if (gameGrid.answer[t.r][t.c] != t.active) {
+			correct = false;
+			gameGrid.horizontalHints[t.r].correct = false;
+			gameGrid.verticalHints[t.c].correct = false;
+		}
 	}
-	return true;
+	return correct;
 }
 
 inline void Game::_clearGameGrid() {
@@ -262,4 +291,4 @@ inline void Game::_clearGameGrid() {
 		t.active = false;
 		t.state = TileState::EMPTY;
 	}
-}
+} 

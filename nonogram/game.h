@@ -26,11 +26,17 @@ struct GameTile {
 	~GameTile();
 };
 
+struct HintData {
+	std::vector<int> vec;
+	std::string str;
+	bool correct;
+};
+
 struct GameGrid {
 	// 5x5, 10x10, 15x15, 20x20
 	std::vector<GameTile> tiles;
 	// sides that give hints (element 0 is horizntal, element 1 is vertical)
-	std::vector<std::pair<std::vector<int>, std::string>> _horizontalHints, _verticalHints;
+	std::vector<HintData> horizontalHints, verticalHints;
 	std::vector<std::vector<bool>> answer;
 	int horiDisp, vertDisp;
 	AABB gameTilesDimensions;
