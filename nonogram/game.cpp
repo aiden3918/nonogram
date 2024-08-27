@@ -34,6 +34,7 @@ void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& 
 		int((answer.size() * tSize) + (answer.size() / 5)));
 	center = screenCenter;
 	pos = screenCenter - (gridSize / 2.0f);
+	pos.y *= 1.4f;
 	gameTilesDimensions = { pos, pos + gridSize };
 }
 
@@ -108,7 +109,7 @@ void GameGrid::CreateNewAnswer() {
 			vertDisp = verticalHints[c].str.length();
 	}
 
-	horiDisp *= tSize;
+	horiDisp *= tSize / 1.5;
 	vertDisp *= tSize / 2;
 
 	// cout2DVec<int>(_horizontalHints);
