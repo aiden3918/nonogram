@@ -127,7 +127,7 @@ void GameGrid::CreateNewAnswer() {
 			vertDisp = verticalHints[c].str.length();
 	}
 
-	horiDisp *= tSize;
+	horiDisp *= tSize / 1.5f;
 	vertDisp *= tSize / 2;
 
 	// cout2DVec<int>(_horizontalHints);
@@ -160,7 +160,7 @@ void Game::NewGame(const vec2D& screenCenter, int numTiles, int tileSize) {
 	_winStrPos = vec2D(screenCenter.x - 20.0f, gameGrid.gameTilesDimensions.max.y + 40.0f);
 
 	_stopwatch = 0.0f;
-	_stopwatchPos = vec2D(screenCenter.x, gameGrid.pos.y - gameGrid.vertDisp - 20.0f);
+	_stopwatchPos = vec2D(screenCenter.x, gameGrid.pos.y - gameGrid.vertDisp - 15.0f);
 
 	_clearBtn->vPos = { gameGrid.gameTilesDimensions.min.x - gameGrid.horiDisp, 
 		gameGrid.gameTilesDimensions.max.y };
