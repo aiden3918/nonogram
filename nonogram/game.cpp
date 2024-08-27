@@ -14,6 +14,7 @@ GameTile::GameTile(const vec2D& gridPos, const int& tileSize, const int& row, co
 GameTile::~GameTile() {}
 
 void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& tileSize) {
+
 	horiDisp = 0;
 	vertDisp = 0;
 	tiles.clear();
@@ -33,28 +34,31 @@ void GameGrid::Clear(const vec2D& screenCenter, const int& numTiles, const int& 
 	gridSize = vec2D(int((answer[0].size() * tSize) + (answer[0].size() / 5)),
 		int((answer.size() * tSize) + (answer.size() / 5)));
 	center = screenCenter;
-	pos = screenCenter - (gridSize / 2.0f);
-	pos.y *= 1.4f;
+	if (numTiles > 10) center.y *= 1.3f;
+	pos = center - (gridSize / 2.0f);
 	gameTilesDimensions = { pos, pos + gridSize };
+
 }
 
 void GameGrid::CreateNewAnswer() {
 	srand(time(NULL));
 	std::vector<bool> emptyRow;
-	emptyRow.resize(answer[0].size(), 0);
+	int cols = answer[0].size();
+	int rows = answer.size();
+	emptyRow.resize(cols, 0);
 
-	for (int r = 0; r < answer.size(); r++) {
+	for (int r = 0; r < rows; r++) {
 		int rowHintIndex = 0;
 		horizontalHints[r].vec.push_back(0);
 
 		// randomize row
-		for (int c = 0; c < answer[r].size(); c++) answer[r][c] = rand() % 2;
+		for (int c = 0; c < cols; c++) answer[r][c] = rand() % 2;
 
 		// if row is empty, add a one in there somewhere
 		if (answer[r] == emptyRow) answer[r][rand() % emptyRow.size()] == 1;
 
 		// side hints (horizontal)
-		for (int c = 0; c < answer[r].size(); c++) {
+		for (int c = 0; c < cols; c++) {
 			switch (answer[r][c]) {
 			case 0: {
 				if (horizontalHints[r].vec[rowHintIndex] != 0) {
@@ -78,6 +82,20 @@ void GameGrid::CreateNewAnswer() {
 		// _horizontalHints[r].second.substr(0, _horizontalHints[r].second.length() - 1);
 		if (horizontalHints[r].str.length() > horiDisp)
 			horiDisp = horizontalHints[r].str.length();
+	}
+
+	// check for empty columns
+	// would be easier to just insert a random 1 somewhere no matter what, but init
+	// is called only once per game so why not use some extra cpu power :)
+	for (int c = 0; c < cols; c++) {
+		bool emptyCol = true;
+		for (int r = 0; r < rows; r++) {
+			if (answer[r][c] != 0) {
+				emptyCol = false;
+				break;
+			}
+		}
+		if (emptyCol) answer[rand() % rows][c] = 1;
 	}
 
 	// vertical hints
@@ -109,7 +127,7 @@ void GameGrid::CreateNewAnswer() {
 			vertDisp = verticalHints[c].str.length();
 	}
 
-	horiDisp *= tSize / 1.5;
+	horiDisp *= tSize;
 	vertDisp *= tSize / 2;
 
 	// cout2DVec<int>(_horizontalHints);
@@ -132,22 +150,54 @@ Game::Game() {}
 Game::~Game() {}
 
 void Game::NewGame(const vec2D& screenCenter, int numTiles, int tileSize) {
+
+	gameState = GameState::PLAYING;
+
 	gameGrid.Clear(screenCenter, numTiles, tileSize);
 	gameGrid.CreateNewAnswer();
 	gameGrid.CreateBoard();
 
+	_winStrPos = vec2D(screenCenter.x - 20.0f, gameGrid.gameTilesDimensions.max.y + 40.0f);
+
+	_stopwatch = 0.0f;
+	_stopwatchPos = vec2D(screenCenter.x, gameGrid.pos.y - gameGrid.vertDisp - 20.0f);
+
+	_clearBtn->vPos = { gameGrid.gameTilesDimensions.min.x - gameGrid.horiDisp, 
+		gameGrid.gameTilesDimensions.max.y };
+	_newGameBtn->vPos = { gameGrid.gameTilesDimensions.min.x + 60.0f - gameGrid.horiDisp,
+		gameGrid.gameTilesDimensions.max.y };
+	_showCorrectLabel->vPos = { gameGrid.gameTilesDimensions.min.x + 150.0f - gameGrid.horiDisp,
+		gameGrid.gameTilesDimensions.max.y };
+	_showCorrectCB->vPos = { gameGrid.gameTilesDimensions.min.x + 310.0f - gameGrid.horiDisp, 
+		gameGrid.gameTilesDimensions.max.y + 5.0f };
+
 	std::cout << gameGrid.tiles.size() << std::endl;
 }
 
-void Game::Update(olc::PixelGameEngine* engine) {
+void Game::Update(olc::PixelGameEngine* engine, float& fElapsedTime) {
 	_guiManager.Update(engine);
 	vec2D mousePos = engine->GetMousePos();
+
+	if (gameState == GameState::PLAYING) _stopwatch += fElapsedTime;
 
 	if (_clearBtn->bPressed) _clearGameGrid();
 	if (_newGameBtn->bPressed) {
 		_clearGameGrid();
 		NewGame(engine->GetScreenSize() / 2, 
 			gameGrid.answer[0].size(), gameGrid.tSize);
+		return;
+	}
+
+	if (_boardSizeDropdown->nPreviouslySelectedItem != _boardSizeDropdown->nSelectedItem) {
+		int numTiles = (_boardSizeDropdown->nSelectedItem + 1) * 5;
+		int tileSize = 15;
+		//_hintStrScale = vec2D(1.0f, 1.0f);
+		//if (_boardSizeDropdown->nSelectedItem > 1) {
+		//	tileSize = 10;
+		//	_hintStrScale = vec2D(0.8f, 0.8f);
+		//};
+		NewGame(engine->GetScreenSize() / 2, numTiles, tileSize);
+		return;
 	}
 
 	bool leftHeld = engine->GetMouse(olc::Mouse::LEFT).bHeld;
@@ -183,13 +233,25 @@ void Game::Update(olc::PixelGameEngine* engine) {
 
 	}
 
-	if (_matchesAnswer()) std::cout << "win" << std::endl;
+	if (_matchesAnswer()) gameState = GameState::WIN;
 }
 
 void Game::Draw(olc::PixelGameEngine* engine) {
 	vec2D mousePos = vec2D(engine->GetMousePos());
-	engine->DrawStringDecal({ 5.0f, 5.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
+	engine->DrawStringDecal({ 5.0f, 550.0f }, "Mouse Pos: " + std::to_string(mousePos.x) + ", " +
 		std::to_string(mousePos.y), olc::BLACK);
+	engine->FillRectDecal({ 0.0f, 0.0f }, { (float)engine->GetScreenSize().x, {50.0f} },
+		olc::BLACK);
+	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
+
+	// draw timer
+	std::string hrStr = std::to_string(int(_stopwatch / 3600.0f));
+	std::string minStr = std::to_string(int(_stopwatch / 60.0f) % 60);
+	if (minStr.length() < 2) minStr.insert(0, "0");
+	std::string secStr = std::to_string(int(_stopwatch) % 60);
+	if (secStr.length() < 2) secStr.insert(0, "0");
+	engine->DrawStringDecal({ _stopwatchPos.x - 25.0f, _stopwatchPos.y }, 
+		hrStr + ":" + minStr + ":" + secStr, olc::BLACK);
 
 	// draw game tiles
 	for (GameTile& t : gameGrid.tiles) {
@@ -213,16 +275,17 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 	// draw horizontal hints
 	int stringSpacing = (gameGrid.tiles[0].tSize);
 
+	olc::vf2d strScale = { _hintStrScale.x, _hintStrScale.y };
 	for (int h = 0; h < gameGrid.horizontalHints.size(); h++) {
 		if (gameGrid.horizontalHints[h].correct && _showCorrectCB->bChecked) {
 			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
 				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 }, 
-				gameGrid.horizontalHints[h].str, olc::GREEN);
+				gameGrid.horizontalHints[h].str, olc::GREEN, strScale);
 		} 
 		else {
 			engine->DrawStringDecal({ gameGrid.pos.x - gameGrid.horiDisp + 3,
 				gameGrid.pos.y + h * stringSpacing + (h / 5) + 3 },
-				gameGrid.horizontalHints[h].str, olc::BLACK);
+				gameGrid.horizontalHints[h].str, olc::BLACK, strScale);
 		}
 
 		engine->DrawRectDecal({ gameGrid.pos.x - gameGrid.horiDisp,
@@ -235,22 +298,23 @@ void Game::Draw(olc::PixelGameEngine* engine) {
 		if (gameGrid.verticalHints[v].correct && _showCorrectCB->bChecked) {
 			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
 				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
-				olc::GREEN);
+				olc::GREEN, strScale);
 		}
 		else {
 			engine->DrawStringDecal({ gameGrid.pos.x + v * stringSpacing + 3,
 				gameGrid.pos.y - gameGrid.vertDisp + 3 }, gameGrid.verticalHints[v].str,
-				olc::BLACK);
+				olc::BLACK, strScale);
 		}
 		engine->DrawRectDecal({ gameGrid.pos.x + v * stringSpacing + (v / 5),
 			gameGrid.pos.y - gameGrid.vertDisp }, { (float)gameGrid.tSize, (float)gameGrid.vertDisp},
 			olc::BLACK);
 	}
 
-	engine->FillRectDecal({ 0.0f, 0.0f }, { (float)engine->GetScreenSize().x, {50.0f} }, 
-		olc::BLACK);
-	engine->DrawStringDecal({ 10.0f, 10.0f }, "Nonograms", olc::WHITE, { 3.0f, 3.0f });
-	_guiManager.Draw(engine);
+	if (gameState == GameState::WIN) engine->DrawStringDecal({ _winStrPos.x, _winStrPos.y }, 
+		"Win!", olc::GREEN, {2.0f, 2.0f});
+
+	_guiManager.DrawDecal(engine);
+
 }
 
 void Game::InitUI() {
@@ -268,6 +332,8 @@ void Game::InitUI() {
 	_showCorrectCB = new olc::QuickGUI::CheckBox(_guiManager, "",
 		false, { gameGrid.gameTilesDimensions.min.x + 310.0f - gameGrid.horiDisp,
 		gameGrid.gameTilesDimensions.max.y + 5.0f}, { 20.0f, 20.0f });
+	_boardSizeDropdown = new olc::QuickGUI::ListBox(_guiManager, _boardSizesStr,
+		{ 550.0f, 10.0f }, { 70.0f, 30.0f });
 }
 
 inline bool Game::_matchesAnswer() {

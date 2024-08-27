@@ -10,7 +10,7 @@
 #include "olcPGEX_QuickGUI.h"
 
 const enum class TileState {EMPTY = 0, FILLED = 1, FLAGGED = 2};
-const enum class GameState {MENU, PLAYING, WIN};
+const enum class GameState {PLAYING, WIN};
 
 struct GameTile {
 	vec2D pos;
@@ -59,20 +59,27 @@ public:
 	~Game();
 
 	void NewGame(const vec2D& screenCenter, int numTiles = 5, int tileSize = 5);
-	void Update(olc::PixelGameEngine* engine);
+	void Update(olc::PixelGameEngine* engine, float& fElapsedTime);
 	void Draw(olc::PixelGameEngine* engine);
 	void InitUI();
 
 	GameGrid gameGrid;
+	GameState gameState;
 private:
 	bool _mouseDown;
 	TileState _mouseActiveState;
+	vec2D _winStrPos;
+	float _stopwatch;
+	vec2D _stopwatchPos;
+	vec2D _hintStrScale = { 1.0f, 1.0f };
 
 	olc::QuickGUI::Manager _guiManager;
 	olc::QuickGUI::Button* _clearBtn = nullptr;
 	olc::QuickGUI::Button* _newGameBtn = nullptr;
 	olc::QuickGUI::Label* _showCorrectLabel = nullptr;
 	olc::QuickGUI::CheckBox* _showCorrectCB = nullptr;
+	std::vector<std::string> _boardSizesStr = { "5x5", "10x10", "15x15", "20x20" };
+	olc::QuickGUI::ListBox* _boardSizeDropdown = nullptr;
 	
 	bool _matchesAnswer();
 	inline void _clearGameGrid();
